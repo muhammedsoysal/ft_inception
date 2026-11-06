@@ -1,0 +1,149 @@
+1. Docker nedir?
+Docker, uygulamaları ve bağımlılıklarını tek bir paket halinde çalıştıran bir konteyner teknolojisidir.
+Yani uygulama aynı şekilde her bilgisayarda çalışır.
+
+2. Docker ile sanal makine farkı nedir?
+Sanal makine ayrı bir işletim sistemi çalıştırır.
+Docker ise ana bilgisayarın çekirdeğini paylaşır.
+Bu yüzden Docker daha hafif, daha hızlı ve daha az kaynak tüketir.
+
+3. Docker Compose neden kullanılır?
+Docker Compose, birden fazla konteyneri tek bir dosya ile yönetmek için kullanılır.
+Örneğin web, veritabanı ve nginx gibi servisleri tek komutla başlatırız.
+
+4. Docker image ile container farkı nedir?
+Image, uygulamanın çalıştırılabilir kalıbıdır.
+Container, bu imajın çalışan canlı örneğidir.
+Yani image = şablon, container = çalışan nesne.
+
+5. Compose ile kullanılan image ile kullanılmayan image farkı nedir?
+Compose ile kullanılan image, birden fazla servisi aynı sistem içinde yönetmek için kullanılır.
+Compose kullanılmayan image ise tek başına çalıştırılır ve manuel yönetilir.
+
+Kısa özet:
+Docker uygulamaları konteynerlerde çalıştırır.
+Docker Compose ise çoklu konteynerleri tek yapılandırmada yönetir.
+
+Kolay anlatım:
+Docker = uygulamayı paketler.
+Container = paketi çalıştırır.
+Compose = birden fazla paketi birlikte yönetir.
+
+En kısa cevaplar:
+- Docker: Uygulama paketleme ve çalıştırma aracı.
+- VM: Ağır, ayrı işletim sistemi.
+- Container: Hafif, aynı kernel paylaşan çalışma ortamı.
+- Image: Çalıştırılabilir kalıp.
+- Compose: Çoklu konteyner yönetimi.
+
+
+
+
+
+/* 
+
+/requirements/mariadb/Dockerfile dosyası
+
+Burada Dockerfile, Debian Buster tabanlı bir image kullanarak MariaDB server ve client kurar.
+MariaDB yapılandırma dosyasını ve otomatik veritabanı oluşturma betiğini konteyner içine kopyalar ve betiğe çalıştırma izni verir.
+
+- apt-get update -y  = paket listelerini günceller.
+- apt-get install -y mariadb-server mariadb-client =  MariaDB sunucusunu ve istemcisini kurar.
+- apt-get clean ve rm -rf /var/lib/apt/lists/* =  bu iki komut gereksiz dosyaları temizleyerek image boyutunu küçültür.
+- COPY  = bu copy komutları, MariaDB yapılandırma dosyasını ve otomatik veritabanı oluşturma betiğini konteyner içine kopyalar.
+- RUN chmod +x /auto_db.sh =  betiğe çalıştırma izni verir.
+- ENTRYPOINT ["/auto_db.sh"]  =  konteyner başlatıldığında otomatik olarak betiğin
+
+
+*/
+
+
+
+
+/*
+50-server.cnf dosyası
+Burası maridbserver için gerekli olan temel ayarları içerir.
+
+user= mysql hangi kullanıcı ile çalışcağı belirtiliyor.
+pid-file= mysql serverin çalıştığı pid dosyasının konumunu belirtir.
+socket= mysql serverin çalıştığı socket dosyasının konumunu belirtir.
+port= mysql serverin çalıştığı portu belirtir.
+basedir= mysql serverin kurulu olduğu dizini belirtir.
+datadir= mysql serverin veri tabanlarının bulunduğu dizini belirtir.
+tmpdir= mysql serverin geçici dosyalarının bulunduğu dizini belirtir.
+lc-messages-dir= mysql serverin mesajlarının bulunduğu dizini belirtir.
+bind-address= mysql serverin hangi ip adresinden bağlantı kabul edeceğini belirtir.
+
+ */
+
+/*
+auto_db.sh dosyası
+Burası maridbserver için gerekli olan temel ayarları içerir.
+if [ ! -d "/var/lib/mysql/wordpress" ]: Veritabanının daha önce kurulup kurulmadığını kontrol eder. 
+    Konteyner yeniden başlarsa verileri sıfırlamamak içindir.
+
+eval $(cat /run/secrets/...): Şifreleri güvenli şekilde secrets/ klasöründen okur
+
+CREATE DATABASE / USER: WordPress için veritabanını ve kullanıcısını oluşturur.   
+
+ALTER USER 'root': Root kullanıcısına şifre koyar, böylece şifresiz giriş engellenir 
+
+exec mysqld_safe: Script'in en sonundaki exec, MariaDB'yi PID 1 (ön plan) olarak çalıştırır ve konteynerın açık kalmasını sağlar.
+ */
+
+
+
+
+# Wordpress için gerekli olan temel ayarlara buradan bak lo
+
+/*
+
+    Dockerfile dosyası
+
+FROM debian:buster: Temiz Debian tabanı.
+
+RUN apt-get install...: PHP nin web işlemlerini yürüten php-fpm paketini 
+    ve veritabanıyla konuşmasını sağlayan php-mysql eklentisini yüklüyoruz
+
+curl ... wp-cli.phar: WordPress'i tarayıcıya girmeden,
+    kodla/script ile otomatik kurabilmek için WordPress'in resmi komut satırı aracını (wp-cli) indirip 
+    /usr/local/bin/wp yoluna sistem komutu olarak taşıyoruz    
+COPY conf/www.conf: PHP'nin Port 9000 üzerinden dinleme yapması için yazacağımız 
+    konfigürasyon dosyasını aktarıyoruz.
+
+ENTRYPOINT ["/auto_wp.sh"]: Konteyner her çalıştığında kurulum script'imizi tetikliyoruz.
+*/
+
+
+
+/*
+    auto_wp.sh dosyası
+
+until mysqladmin ping -h"mariadb" ... 
+    MariaDB veritabanı konteynerının tamamen ayağa kalkmasını bekler. 
+    Veritabanı hazır olmadan kurulum yapmaya çalışırsa hata vermesini engeller.
+
+wp core download & wp config create
+    WordPress çekirdek dosyalarını indirir 
+    ve wp-config.php dosyasını MariaDB bilgilerimizle otomatik oluşturur.
+
+wp core install (bu nasıl bir dil ise admin kullancı belirleniyormuş loo)
+    WordPress'i kurar. Admin kullanıcı oluşturur ve siteyi kurar.
+wp user create
+    Admin kullanıcıdan farklı bir kullanıcı oluşturur. 
+    Bu kullanıcıyı author rolünde oluşturur.
+
+exec php-fpm7.3 -F
+    Scriptin sonunda php-fpm'yi foreground modda çalıştırır.
+
+*/
+
+
+
+Komutlar ve anlmları
+
+- FROM = 
+- RUN = 
+- COPY =
+- ENTRYPOINT = 
+
