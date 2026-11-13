@@ -1,7 +1,7 @@
-FROM debian:buster
+FROM debian:bookworm
 
 RUN apt-get update -y && \
-    apt-get install -y php7.3-fpm php7.3-mysql curl mariadb-client && \
+    apt-get install -y php8.2-fpm php8.2-mysql curl mariadb-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
@@ -9,7 +9,7 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     mv wp-cli.phar /usr/local/bin/wp
 
 
-COPY conf/www.conf /etc/php/7.3/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 COPY tools/auto_wp.sh /auto_wp.sh
 
 RUN chmod +x /auto_wp.sh
