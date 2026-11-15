@@ -3,8 +3,8 @@ COMPOSE_FILE = srcs/docker-compose.yml
 
 
 build:
-	mkdir -p ./data/mysql
-	mkdir -p ./data/wordpress
+	mkdir -p /home/musoysal/data/mysql
+	mkdir -p /home/musoysal/data/wordpress
 	$(COMPOSE) -f $(COMPOSE_FILE) up -d --build
 
 up:

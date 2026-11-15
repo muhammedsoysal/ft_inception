@@ -54,13 +54,13 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${PWD}/data/mysql
+      device: /home/musoysal/data/mysql
   wordpress_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ${PWD}/data/wordpress
+      device: /home/musoysal/data/wordpress
 
 networks:
   inception_network:
