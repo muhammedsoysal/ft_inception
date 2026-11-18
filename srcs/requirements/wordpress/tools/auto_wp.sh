@@ -3,7 +3,10 @@ set -e
 
 MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 
-until mysqladmin ping -h mariadb --silent; do
+WP_ADMIN_PASSWORD=$(grep '^WP_ADMIN_PASSWORD=' /run/secrets/credentials | cut -d '=' -f 2-)
+WP_USER_PASSWORD=$(grep '^WP_USER_PASSWORD=' /run/secrets/credentials | cut -d '=' -f 2-)
+
+until mariadb-admin ping -h mariadb --silent; do
     sleep 2
 done
 
@@ -38,4 +41,5 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 fi
 
 mkdir -p /run/php
+
 exec php-fpm8.2 -F

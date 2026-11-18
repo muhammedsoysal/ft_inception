@@ -1,40 +1,35 @@
-COMPOSE =docker compose
-COMPOSE_FILE = srcs/docker-compose.yml
+COMPOSE  = docker compose -f  srcs/docker-compose.yml
+DATA_DIR = /home/$(USER)/data
+all: up
 
+up: 
+	mkdir -p $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress
+	$(COMPOSE) up -d --build
 
-build:
-	mkdir -p /home/musoysal/data/mysql
-	mkdir -p /home/musoysal/data/wordpress
-	$(COMPOSE) -f $(COMPOSE_FILE) up -d --build
-
-up:
-	$(COMPOSE) -f $(COMPOSE_FILE) up -d
 down:
-	$(COMPOSE) -f $(COMPOSE_FILE) down
-restart:
-	$(COMPOSE) -f $(COMPOSE_FILE) down
-	$(COMPOSE) -f $(COMPOSE_FILE) up -d
-clean:
-	$(COMPOSE) -f $(COMPOSE_FILE) down --rmi all --volumes --remove-orphans
-logs:
-	$(COMPOSE) -f $(COMPOSE_FILE) logs -f
-kill:
-	$(COMPOSE) -f $(COMPOSE_FILE) kill
-stop:
-	$(COMPOSE) -f $(COMPOSE_FILE) stop
-start:
-	$(COMPOSE) -f $(COMPOSE_FILE) start
-stopMariaDB:
-	$(COMPOSE) -f $(COMPOSE_FILE) stop mariadb
-stopWordPress:
-	$(COMPOSE) -f $(COMPOSE_FILE) stop wordpress
-stopnginx:
-	$(COMPOSE) -f $(COMPOSE_FILE) stop nginx
-startMariaDB:
-	$(COMPOSE) -f $(COMPOSE_FILE) start mariadb
-startWordPress:
-	$(COMPOSE) -f $(COMPOSE_FILE) start wordpress
-startnginx:	
-	$(COMPOSE) -f $(COMPOSE_FILE) start nginx
+	$(COMPOSE) down
 
-.PHONY: build up down restart  clean logs kill
+stop:
+	$(COMPOSE) stop $(SERVICE)
+
+kill:
+	$(COMPOSE) kill $(SERVICE)
+
+start:
+	$(COMPOSE) start $(SERVICE)
+
+logs:
+	$(COMPOSE) logs -f $(SERVICE)
+
+ps:
+	$(COMPOSE) ps
+
+clean:
+	$(COMPOSE) down --rmi all --volumes --remove-orphans
+
+fclean: clean
+	sudo rm -rf $(DATA_DIR)
+
+re: fclean all
+
+.PHONY: all up down stop kill start logs ps clean fclean re
